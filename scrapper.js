@@ -51,7 +51,7 @@ async function getBookByTitleAndAuthor(title, author) {
                 return true;
             }
         });
-        await page.screenshot({ path: `./screenshots/${title}-${author}.png`, fullPage: true });
+        await page.screenshot({ path: `./screenshots/${createFileName(title)}-${createFileName(author)}.png`, fullPage: true });
         await browser.close();
     } catch(err) {
         console.log(err)
@@ -70,6 +70,11 @@ const readFile = (...args) => {
     });
 }
 
+const createFileName = str => {
+    const noSpecialChar = str.replace(/[^a-zA-Z]/g,"");
+    return noSpecialChar;
+}
+
 (async () => {
     const rawBookData = await readFile('./test.tsv', 'utf8').catch(err => console.log(err));
     const books = rawBookData.split('\n').splice(1, rawBookData.length - 1).map(item => {
@@ -80,9 +85,9 @@ const readFile = (...args) => {
             author: row[4]
         };
     });
-    console.log(books);
-    // for (const book of books) {
-    //     await getBookByTitleAndAuthor(book.title, book.author).catch(err => browser.close());
-    // }
+
+    for (const book of books) {
+        await getBookByTitleAndAuthor(book.title, book.author).catch(err => browser.close());
+    }
     // await getBookByTitleAndAuthor(books[2].title, books[2].author).catch(err => console.log(err))
 })()
