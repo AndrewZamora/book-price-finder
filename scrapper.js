@@ -36,6 +36,7 @@ async function getBookByISBN(url, isbn) {
 async function getBookByTitleAndAuthor(title, author) {
     const url = 'https://www.bookfinder.com/';
     const browser = await puppeteer.launch({ headless: false });
+    let results;
     try {
         const page = await browser.newPage();
         await page.setViewport({ width: 1280, height: 800 });
@@ -45,12 +46,12 @@ async function getBookByTitleAndAuthor(title, author) {
         await page.focus('#title');
         await page.keyboard.type(title);
         await page.click('#submitBtn');
-        await page.waitForFunction(() => {
-            if (document.querySelector('.select-authorname')) {
-                results = "success";
-                return true;
-            }
+        await page.waitForSelector('#bd > div.search-heading-box')
+        const firstResultUrl = await page.evaluate(()=> {
+            return document.querySelector("ul.select-titlenames > li > span > a").href;
         });
+        await page.goto(firstResultUrl);
+        await page.waitForSelector("#bd > div.search-heading-box")
         await page.screenshot({ path: `./screenshots/${createFileName(title)}-${createFileName(author)}.png`, fullPage: true });
         await browser.close();
     } catch(err) {
@@ -86,8 +87,8 @@ const createFileName = str => {
         };
     });
 
-    for (const book of books) {
-        await getBookByTitleAndAuthor(book.title, book.author).catch(err => browser.close());
-    }
-    // await getBookByTitleAndAuthor(books[2].title, books[2].author).catch(err => console.log(err))
+    // for (const book of books) {
+    //     await getBookByTitleAndAuthor(book.title, book.author).catch(err => browser.close());
+    // }
+    await getBookByTitleAndAuthor(books[4].title, books[4].author).catch(err => console.log(err))
 })()
